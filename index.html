@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal de Calculadoras · VisualCorp</title>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --fg:#f7f7f7;
+      --muted:#bfbfbf;
+      --card:#141414;
+      --input:#1c1c1c;
+      --border:linear-gradient(135deg,#ffd400,#ff9f0a);
+      --accent:#ffcc00;
+      --shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .container{
+      max-width:900px;
+      margin-inline:auto;
+      padding:24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    header{
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    h1{
+      font-size: clamp(28px, 5vw, 42px);
+      margin:0;
+      letter-spacing:.3px;
+      font-weight:800;
+    }
+    p.subtitle {
+      font-size: clamp(16px, 2.5vw, 18px);
+      color: var(--muted);
+      margin: 8px 0 0;
+    }
+
+    /* Grid para los botones del portal */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .portal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Estilo de los botones grandes */
+    .btn-portal {
+      position: relative;
+      display: block;
+      padding: 24px 30px;
+      background: var(--card);
+      border-radius: 18px;
+      text-decoration: none;
+      color: var(--fg);
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      overflow: hidden;
+    }
+
+    /* Efecto de borde con gradiente, igual a las tarjetas */
+    .btn-portal::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:18px;
+      padding:2px; /* Grosor del borde */
+      background:var(--border);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events:none;
+    }
+
+    .btn-portal:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.45);
+    }
+
+    .btn-portal .title {
+      display: block;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+    .btn-portal .description {
+      display: block;
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Portal de Calculadoras</h1>
+      <p class="subtitle">Selecciona la herramienta que deseas utilizar.</p>
+    </header>
+
+    <main class="portal-grid">
+      <a href="VisualCORP.html" class="btn-portal">
+        <span class="title">Calculadora Avanzada v2.1</span>
+        <span class="description">Ideal para productos de taller, souvenirs e imprenta. Con precios dinámicos por volumen.</span>
+      </a>
+
+      <a href="gigaprint.html" class="btn-portal">
+        <span class="title">Calculadora GigaPrint</span>
+        <span class="description">Versión anterior de la calculadora de precios. Acceso para consultas o uso heredado.</span>
+      </a>
+    </main>
+  </div>
+</body>
+</html>
