@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VisualCorp · Calculadora de Precios v2.1 (IVA Corregido)</title>
+  <style>
+    :root{
+      --bg:#0b0b0b; --fg:#f7f7f7; --muted:#bfbfbf; --card:#141414;
+      --input:#1c1c1c; --border:linear-gradient(135deg,#ffd400,#ff9f0a);
+      --accent:#ffcc00; --shadow: 0 8px 24px rgba(0,0,0,.35);
+      --ok: #00d27a; --warn: #ffb703;
+    }
+    body.light{
+      --bg:#ffffff; --fg:#121212; --muted:#444; --card:#f7f7f7;
+      --input:#ffffff; --shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, 'Helvetica Neue', Arial, 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    }
+    .container{max-width:1200px; margin-inline:auto; padding:24px}
+    header{ display:grid; gap:16px; margin-bottom:20px; }
+    .brand{ display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap }
+    .brand h1{ font-size: clamp(18px, 2.2vw, 24px); margin:0; letter-spacing:.3px; font-weight:800 }
+    .top-controls{ display:flex; gap:12px; flex-wrap:wrap; align-items:center }
+    .chip{ display:flex; align-items:center; gap:8px; background:var(--card); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow) }
+    .chip label{ font-weight:700; font-size:13px; color:var(--muted)}
+    .chip input[type="number"], .chip select{ width:110px; padding:10px 12px; border-radius:10px; border:1px solid transparent; background:var(--input); color:var(--fg); outline:none }
+    .chip input[type="number"]:focus, .chip select:focus{ border-color: var(--accent) }
+    .btn{ cursor:pointer; user-select:none; border:0; border-radius:12px; padding:10px 14px; background:var(--card); color:var(--fg); font-weight:800; box-shadow:var(--shadow); transition:transform .06s ease, box-shadow .2s ease }
+    .btn:hover{ transform:translateY(-1px) }
+    .btn.toggle{ position:relative; padding-left:46px }
+    .btn.toggle::before{ content:""; position:absolute; left:12px; top:50%; translate:0 -50%; width:22px; height:22px; border-radius:50%; background: radial-gradient(circle at 30% 30%, #fff08a, #ffb300 70%); box-shadow: inset 0 0 0 2px rgba(0,0,0,.15) }
+    body.light .btn.toggle::before{ background: radial-gradient(circle at 30% 30%, #aac7ff, #5aa9ff 70%) }
+    .grid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:20px; align-items:start }
+    .col{ grid-column: span 6 }
+    @media (max-width: 900px){ .col{ grid-column: 1 / -1 } }
+    .card{ position:relative; border-radius:18px; padding:18px; background:var(--card); box-shadow:var(--shadow); overflow:hidden }
+    .card::before{ content:""; position:absolute; inset:0; border-radius:18px; padding:2px; background:var(--border); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none }
+    .card h2{ margin:4px 0 12px; font-size: clamp(18px,2.4vw,22px) }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px }
+    .row3{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:12px }
+    .row1{ display:grid; grid-template-columns: 1fr; gap:12px; margin-bottom:12px }
+    label{ font-size:12px; color:var(--muted); font-weight:800; letter-spacing:.3px; text-transform:uppercase }
+    input[type="number"], input[type="text"], select{ width:100%; border-radius:12px; padding:12px 14px; border:1px solid transparent; background:var(--input); color:var(--fg); outline:none }
+    input::placeholder{ color:#888 }
+    input:focus, select:focus{ border-color: var(--accent) }
+    .kpi{ display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+    .kpi .label{ color:var(--muted); font-weight:700; font-size:14px; }
+    .kpi .val{ font-weight:700; font-size: 16px; }
+    .pill-group{ display:flex; flex-wrap:wrap; gap:10px }
+    .pill{ border:0; padding:10px 14px; border-radius:999px; background: linear-gradient(135deg,#ffd400,#ff9f0a); color:#111; cursor:pointer; font-weight:900; letter-spacing:.2px; box-shadow: 0 6px 16px rgba(255,159,10,.25); opacity:.95 }
+    .pill:hover{ opacity:1; transform: translateY(-1px) }
+    .pill.active{ box-shadow: 0 0 0 2px rgba(0,0,0,.22), 0 10px 24px rgba(255,159,10,.35); opacity:1 }
+    .divider{ height:1px; background:linear-gradient(90deg, transparent, #ffd400 40%, #ff9f0a 60%, transparent); opacity:.5; margin:12px 0 }
+    .foot-note{ font-size:12px; color:var(--muted); margin-top:6px }
+    .total-box{ display:grid; gap:10px; margin-top:12px; }
+    .total-line{ display:flex; justify-content:space-between; align-items:center; font-weight:900 }
+    .grand{ font-size: clamp(20px, 3vw, 28px) }
+    .muted{ color:var(--muted); font-weight:700 }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; background:#262626 }
+    .dot{ width:8px; height:8px; border-radius:50% }
+    details.db{ background: #0f0f0f; border-radius:12px; padding:10px 12px }
+    details.db summary{ cursor:pointer; font-weight:800 }
+    code.small{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>VisualCorp · Calculadora de Precios v2.1</h1>
+        <div class="top-controls">
+          <div class="chip">
+            <label for="iva">IVA (%)</label>
+            <input type="number" id="iva" min="0" step="0.01" value="15" title="IVA en porcentaje">
+          </div>
+          <div class="chip">
+            <label for="tier">Tarifa</label>
+            <select id="tier" title="Elige nivel de precio para productos por m²">
+              <option value="pvp">PVP</option>
+              <option value="instalacion">Con instalación</option>
+              <option value="corporativo">Corporativo</option>
+            </select>
+          </div>
+          <button id="themeBtn" class="btn toggle" type="button" title="Cambiar claro/oscuro">Modo claro / oscuro</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="col card" id="calcMedidas">
+        <h2>📏 POR MEDIDAS (Taller)</h2>
+        <div class="row">
+          <div>
+            <label for="catMed">Categoría</label>
+            <select id="catMed"></select>
+          </div>
+          <div>
+            <label for="itemMed">Material / producto (m²)</label>
+            <select id="itemMed"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="ancho">Ancho (cm)</label>
+            <input type="number" id="ancho" min="0" step="0.01" placeholder="Ej. 100">
+          </div>
+          <div>
+            <label for="alto">Alto (cm)</label>
+            <input type="number" id="alto" min="0" step="0.01" placeholder="Ej. 100">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="precioM2">Precio por m² (USD)</label>
+            <input type="number" id="precioM2" min="0" step="0.01" placeholder="Ej. 7.00">
+          </div>
+          <div>
+            <label for="areaM2">Área (m²)</label>
+            <input type="number" id="areaM2" readonly>
+          </div>
+        </div>
+        <div class="row1">
+          <span class="badge"><span class="dot" style="background:var(--warn)"></span><span id="msgMed">Selecciona un material para rellenar el precio automático (editable).</span></span>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="row1">
+          <label>🎨 Diseño (elige una opción o ingresa un valor específico)</label>
+          <div class="pill-group" data-scope="med">
+            <button class="pill active" data-add="0">Sin diseño (+$0)</button>
+            <button class="pill" data-add="3">Diseño Sencillo (+$3)</button>
+            <button class="pill" data-add="5">Diseño Normal (+$5)</button>
+            <button class="pill" data-add="10">Diseño Complejo (+$10)</button>
+            <input class="small-input" type="number" id="designCustomMed" min="0" step="0.01" placeholder="Otro $" title="Valor específico de diseño">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="tipoOjal">🧷 Ojales (opcional)</label>
+            <select id="tipoOjal">
+              <option value="none">Sin ojales</option>
+              <option value="grande">Grande ($0.50 c/u)</option>
+              <option value="pequeno">Pequeño ($0.30 c/u)</option>
+            </select>
+          </div>
+          <div>
+            <label for="cantOjal">Cantidad de ojales</label>
+            <input type="number" id="cantOjal" min="0" step="1" value="0">
+          </div>
+        </div>
+        
+        <div class="total-box">
+            <div class="kpi"><span class="label">Subtotal Material</span><span class="val" id="subMaterialMed">$0.00</span></div>
+            <div class="kpi"><span class="label">Costo Diseño</span><span class="val" id="costoDisenoMed">$0.00</span></div>
+            <div class="kpi"><span class="label">Costo Ojales</span><span class="val" id="costoOjalesMed">$0.00</span></div>
+            <div class="divider"></div>
+            <div class="kpi"><span class="label" style="font-weight: 900;">SUBTOTAL (Base)</span><span class="val" id="subtotalBaseMed" style="font-weight: 900;">$0.00</span></div>
+            <div class="kpi"><span class="label">IVA</span><span class="val" id="ivaFinalMed">$0.00</span></div>
+            <div class="total-line grand"><span>TOTAL</span><span id="granTotalMed">$0.00</span></div>
+        </div>
+      </section>
+
+      <section class="col card" id="calcProducto">
+        <h2>🛒 POR PRODUCTO (Souvenirs, etc.)</h2>
+        <div class="row">
+          <div>
+            <label for="catProd">Categoría</label>
+            <select id="catProd"></select>
+          </div>
+          <div>
+            <label for="itemProd">Producto (unitario)</label>
+            <select id="itemProd"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="nombreProd">Nombre del producto</label>
+            <input type="text" id="nombreProd" placeholder="Ej. Taza personalizada">
+          </div>
+          <div>
+            <label for="precioProd">Precio unitario (USD)</label>
+            <input type="number" id="precioProd" min="0" step="0.01" placeholder="Se calcula solo">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="cantidadProd">Cantidad</label>
+            <input type="number" id="cantidadProd" min="1" step="1" value="1">
+          </div>
+          <div>
+            <label>&nbsp;</label>
+             <span class="badge"><span class="dot" style="background:var(--ok)"></span><span id="msgProd">El precio se ajusta por cantidad.</span></span>
+          </div>
+        </div>
+        
+        <div class="divider"></div>
+        <div class="row1">
+          <label>🎨 Diseño (opcional)</label>
+          <div class="pill-group" data-scope="prod">
+            <button class="pill active" data-add="0">Sin diseño (+$0)</button>
+            <button class="pill" data-add="3">Diseño Sencillo (+$3)</button>
+            <button class="pill" data-add="5">Diseño Normal (+$5)</button>
+            <button class="pill" data-add="10">Diseño Complejo (+$10)</button>
+            <input class="small-input" type="number" id="designCustomProd" min="0" step="0.01" placeholder="Otro $">
+          </div>
+        </div>
+        
+        <div class="total-box">
+            <div class="kpi"><span class="label">Subtotal Productos</span><span class="val" id="subMaterialProd">$0.00</span></div>
+            <div class="kpi"><span class="label">Costo Diseño</span><span class="val" id="costoDisenoProd">$0.00</span></div>
+            <div class="divider"></div>
+            <div class="kpi"><span class="label" style="font-weight: 900;">SUBTOTAL (Base)</span><span class="val" id="subtotalBaseProd" style="font-weight: 900;">$0.00</span></div>
+            <div class="kpi"><span class="label">IVA</span><span class="val" id="ivaFinalProd">$0.00</span></div>
+            <div class="total-line grand"><span>TOTAL</span><span id="granTotalProd">$0.00</span></div>
+        </div>
+      </section>
+    </main>
+
+    <section class="card" style="grid-column:1/-1; margin-top:12px">
+      <details class="db">
+        <summary>📦 Ver bases de datos incrustadas (JSON)</summary>
+        <h3 style="margin-top:16px;">DB Taller (Por Medidas)</h3>
+        <pre id="dbView1" class="foot-note" style="white-space:pre-wrap; max-height: 200px; overflow-y:auto; background:#0f0f0f; padding:8px; border-radius:8px;"></pre>
+        <h3 style="margin-top:16px;">DB Souvenirs & Imprenta (Por Producto)</h3>
+        <pre id="dbView2" class="foot-note" style="white-space:pre-wrap; max-height: 200px; overflow-y:auto; background:#0f0f0f; padding:8px; border-radius:8px;"></pre>
+      </details>
+    </section>
+  </div>
+
+<script>
+// ------------------------- BASE DE DATOS #1: VISUALCORP (POR MEDIDAS) -------------------------
+const VISUALCORP_DB = {
+  categories: [
+    { name: 'Impresiones', items: [ { key:'lona_premium_13oz_brillante', label:'Lona Premium brillante 13oz (tejido 500x500)', type:'m2', pvp:7, instalacion:7, corporativo:6 }, { key:'lona_standard_11oz_brillante', label:'Lona Standard brillante 11oz (tejido 500x500)', type:'m2', pvp:5, instalacion:5, corporativo:4 }, { key:'lona_campana_9oz_brillante', label:'Lona Campaña brillante 9oz (tejido 300x500)', type:'m2', pvp:4, instalacion:4, corporativo:3 }, { key:'lona_premium_12oz_mate', label:'Lona Premium mate 12oz (tejido 500x500)', type:'m2', pvp:6, instalacion:12, corporativo:5.5 }, { key:'panaflex_traslucida_13oz', label:'Lona traslúcida / Panaflex 13oz', type:'m2', pvp:10, instalacion:10, corporativo:8 }, { key:'vinil_adh_brillante', label:'Vinil adhesivo brillante (premium)', type:'m2', pvp:8, instalacion:15, corporativo:7 }, { key:'vinil_adh_mate', label:'Vinil adhesivo mate (premium)', type:'m2', pvp:8, instalacion:15, corporativo:7 }, { key:'vinil_adh_transparente', label:'Vinil adhesivo transparente (premium)', type:'m2', pvp:8, instalacion:15, corporativo:7 }, { key:'vinil_adh_laminado', label:'Vinil adhesivo c/ laminación (durab. 3 años)', type:'m2', pvp:12, instalacion:15, corporativo:10 }, { key:'microperforado', label:'Microperforado para vidrio / vehículos', type:'m2', pvp:12, instalacion:18, corporativo:10 }, { key:'vinil_reflectivo_impreso', label:'Vinil reflectivo impreso (señalización vial)', type:'m2', pvp:20, instalacion:30, corporativo:30 }, { key:'vinil_arenado', label:'Vinil arenado (impreso o electrocut)', type:'m2', pvp:20, instalacion:25, corporativo:15 }, { key:'backlight_translucido', label:'Backlight translúcido para box slim', type:'m2', pvp:20, instalacion:25, corporativo:15 }, { key:'floor_graphic', label:'Floor Graphic impreso para piso', type:'m2', pvp:20, instalacion:30, corporativo:16 }, { key:'paper_blue_150', label:'Paper Blue (ancho 150 cm)', type:'m2', pvp:10, instalacion:10, corporativo:8 }, { key:'papel_fotografico_120', label:'Papel fotográfico (alto 120 cm)', type:'m2', pvp:10, instalacion:10, corporativo:8 }, { key:'tela_sintetica_120', label:'Tela sintética (120 cm)', type:'m2', pvp:8, instalacion:8, corporativo:6 }, { key:'lienzo_impreso_120', label:'Lienzo impreso (120 cm alto)', type:'m2', pvp:20, instalacion:20, corporativo:15 } ] },
+    { name: 'Displays importados', items: [ { key:'x_banner_60x160_premium', label:'Banner X 60×160 + lona premium', type:'unit', pvp:30, instalacion:30, corporativo:25 }, { key:'x_banner_60x160_economico', label:'Banner X 60×160 + lona económica', type:'unit', pvp:25, instalacion:25, corporativo:20 }, { key:'rollup_80x200_premium', label:'Roll Up 80×200 + lona premium', type:'unit', pvp:50, instalacion:50, corporativo:40 }, { key:'rollup_80x200_economico', label:'Roll Up 80×200 + lona económica', type:'unit', pvp:40, instalacion:40, corporativo:35 }, { key:'rollup_120x200_premium', label:'Roll Up 120×200 + lona premium', type:'unit', pvp:100, instalacion:100, corporativo:80 }, { key:'rollup_200x200_premium', label:'Roll Up 200×200 + lona premium', type:'unit', pvp:150, instalacion:150, corporativo:120 }, { key:'stand_publicitario_80x180', label:'Stand publicitario 80×180 + vinil', type:'unit', pvp:130, instalacion:130, corporativo:100 }, { key:'popup_300x230', label:'Pop Up 300×230 (acordeón + lona mate + velcro)', type:'unit', pvp:350, instalacion:350, corporativo:300 }, { key:'popup_230x230', label:'Pop Up 230×230 (acordeón + lona mate + velcro)', type:'unit', pvp:300, instalacion:300, corporativo:250 }, { key:'circulo_led_60_giratoria', label:'Círculo LED 60 cm acrílico (giratoria, 2 caras)', type:'unit', pvp:250, instalacion:250, corporativo:220 }, { key:'circulo_led_80_fija', label:'Círculo LED 80 cm acrílico (fija, 2 caras)', type:'unit', pvp:200, instalacion:200, corporativo:180 }, { key:'menudero_acrilico_40x60', label:'Menudero acrílico backlight 40×60 una cara', type:'unit', pvp:80, instalacion:80, corporativo:70 } ] },
+    { name: 'Sustratos rígidos', items: [ { key:'cintra_pvc_6mm', label:'Cintra PVC 6 mm + vinil (m²)', type:'m2', pvp:70, instalacion:80, corporativo:60 }, { key:'cintra_pvc_3mm', label:'Cintra PVC 3 mm + vinil (m²)', type:'m2', pvp:45, instalacion:55, corporativo:35 }, { key:'cintra_pvc_3mm_laminado', label:'Cintra PVC 3 mm + vinil laminado (m²)', type:'m2', pvp:50, instalacion:60, corporativo:40 }, { key:'cintra_pvc_2mm', label:'Cintra PVC 2 mm + vinil (m²)', type:'m2', pvp:40, instalacion:50, corporativo:30 }, { key:'cintra_pvc_1mm', label:'Cintra PVC 1 mm + vinil (m²)', type:'m2', pvp:35, instalacion:45, corporativo:25 }, { key:'cintra_pvc_1mm_personalizado', label:'Cintra PVC 1 mm + vinil personalizado (m²)', type:'m2', pvp:40, instalacion:45, corporativo:30 }, { key:'foamboard_pvc_5mm', label:'Foamboard PVC 5 mm (m²)', type:'m2', pvp:45, instalacion:55, corporativo:35 }, { key:'plancha_galv_fc', label:'Plancha galvanizada 0.70 mm + vinil full color', type:'m2', pvp:80, instalacion:100, corporativo:60 }, { key:'plancha_galv_cortes', label:'Plancha galvanizada 0.70 mm + vinil (cortes rectos)', type:'m2', pvp:100, instalacion:120, corporativo:80 }, { key:'plancha_galv_reflectivo', label:'Plancha galvanizada 0.70 mm + vinil reflectivo', type:'m2', pvp:120, instalacion:150, corporativo:100 }, { key:'alucobond_3mm_int', label:'Alucobond 3 mm interiores + vinil (m²)', type:'m2', pvp:50, instalacion:55, corporativo:40 }, { key:'alucobond_4mm_ext', label:'Alucobond 4 mm exteriores + vinil (m²)', type:'m2', pvp:120, instalacion:150, corporativo:100 }, { key:'lapida_acrilico_3mm_relieve', label:'Lápida acrílico 3 mm + foto en relieve (m²)', type:'m2', pvp:150, instalacion:150, corporativo:120 }, { key:'lapida_acrilico_3mm_foto_nombre', label:'Lápida acrílico 3 mm + foto + nombre en relieve (m²)', type:'m2', pvp:180, instalacion:180, corporativo:150 } ] },
+    { name: 'Productos de taller', items: [ { key:'rotulo_1c_1a3m2', label:'Rótulo estándar 1 cara + lona premium (1–3 m²) [m²]', type:'m2', pvp:25, instalacion:25, corporativo:25 }, { key:'rotulo_1c_5a15m2', label:'Rótulo estándar 1 cara + lona premium (5–15 m²) [m²]', type:'m2', pvp:23, instalacion:23, corporativo:23 }, { key:'rotulo_1c_15mas', label:'Rótulo estándar 1 cara + lona premium (≥15 m²) [m²]', type:'m2', pvp:20, instalacion:20, corporativo:20 }, { key:'rotulo_2c_1a5m2', label:'Rótulo estándar 2 caras + lona premium (1–5 m²) [m²]', type:'m2', pvp:35, instalacion:35, corporativo:35 }, { key:'rotulo_2c_5a15m2', label:'Rótulo estándar 2 caras + lona premium (5–15 m²) [m²]', type:'m2', pvp:33, instalacion:33, corporativo:30 }, { key:'rotulo_1c_forma', label:'Rótulo 1 cara con forma especial + lona premium [m²]', type:'m2', pvp:40, instalacion:40, corporativo:35 }, { key:'rotulo_2c_forma', label:'Rótulo 2 caras con forma especial + lona premium [m²]', type:'m2', pvp:50, instalacion:50, corporativo:45 }, { key:'banner_parado_1c', label:'Banner estándar parado 1 cara (tubo hierro + lona) [m²]', type:'m2', pvp:30, instalacion:30, corporativo:25 }, { key:'banner_parado_2c', label:'Banner estándar parado 2 caras (tubo hierro + lona) [m²]', type:'m2', pvp:40, instalacion:40, corporativo:35 }, { key:'banner_forma_A', label:'Banner en forma de A (2 caras, cadena) [m²]', type:'m2', pvp:60, instalacion:60, corporativo:50 }, { key:'banner_luminoso_2c', label:'Banner luminoso 2 caras (lona traslúcida + estructura) [m²]', type:'m2', pvp:120, instalacion:120, corporativo:100 }, { key:'letrero_lum_1c', label:'Letrero luminoso 1 cara (caja hierro + LED + panaflex) [m²]', type:'m2', pvp:80, instalacion:80, corporativo:70 }, { key:'letrero_lum_2c', label:'Letrero luminoso 2 caras (caja hierro + LED + panaflex) [m²]', type:'m2', pvp:100, instalacion:100, corporativo:90 }, { key:'letrero_lum_forma_1c', label:'Letrero luminoso con forma 1 cara [m²]', type:'m2', pvp:150, instalacion:150, corporativo:130 }, { key:'letrero_lum_forma_2c', label:'Letrero luminoso con forma 2 caras [m²]', type:'m2', pvp:160, instalacion:160, corporativo:140 }, { key:'mantenimiento_lum_1c', label:'Mantenimiento luminoso 1 cara (incluye panaflex + sistema) [m²]', type:'m2', pvp:50, instalacion:50, corporativo:40 }, { key:'mantenimiento_lum_2c', label:'Mantenimiento luminoso 2 caras (incluye panaflex + sistema) [m²]', type:'m2', pvp:60, instalacion:60, corporativo:50 }, { key:'cuadro_madera_lona', label:'Cuadro de madera en lona [m²]', type:'m2', pvp:30, instalacion:30, corporativo:25 }, { key:'minivalla_1c', label:'Minivalla carretero 1 cara (1 pilar + transporte) [m²]', type:'m2', pvp:70, instalacion:70, corporativo:60 }, { key:'minivalla_2c', label:'Minivalla carretero 2 caras (1 pilar + transporte) [m²]', type:'m2', pvp:80, instalacion:80, corporativo:70 }, { key:'valla_semi_2c', label:'Valla semindustrial 2 caras (lona premium + 2 pilares) [m²]', type:'m2', pvp:100, instalacion:100, corporativo:90 }, { key:'valla_industrial', label:'Valla industrial con pilar tubular (dentro/fuera ciudad) [m²]', type:'m2', pvp:400, instalacion:400, corporativo:350 }, { key:'vinil_ploteado_color_ml', label:'Vinil ploteado colores (metro lineal) [unidad]', type:'unit', pvp:20, instalacion:25, corporativo:16 }, { key:'tolda_rect_peq', label:'Tolda rectangular fija (< 2 m²) [m²]', type:'m2', pvp:50, instalacion:50, corporativo:45 }, { key:'tolda_rect_med', label:'Tolda rectangular fija (< 7 m²) [m²]', type:'m2', pvp:45, instalacion:45, corporativo:40 }, { key:'tolda_rect_gra', label:'Tolda rectangular fija (> 8 m²) [m²]', type:'m2', pvp:40, instalacion:40, corporativo:35 }, { key:'tolda_curva_peq', label:'Tolda curva fija (< 2 m²) [m²]', type:'m2', pvp:60, instalacion:60, corporativo:55 }, { key:'tolda_curva_med', label:'Tolda curva fija (< 7 m²) [m²]', type:'m2', pvp:55, instalacion:55, corporativo:50 }, { key:'tolda_curva_gra', label:'Tolda curva fija (> 8 m²) [m²]', type:'m2', pvp:50, instalacion:50, corporativo:45 }, { key:'ruleta_mdf_60cm', label:'Ruleta publicitaria MDF 60 cm (base tubo)', type:'unit', pvp:150, instalacion:150, corporativo:130 } ] },
+    { name: 'Productos adicionales', items: [ { key:'lona_tolda_ml', label:'Lona de tolda (metro lineal)', type:'unit', pvp:15, instalacion:15, corporativo:10 }, { key:'pancarta_60x40', label:'Pancarta 60×40 con madera (equipos deportivos)', type:'unit', pvp:10, instalacion:10, corporativo:8 }, { key:'pancarta_80x60', label:'Pancarta 80×60 con madera', type:'unit', pvp:15, instalacion:15, corporativo:12 }, { key:'pancarta_100x80', label:'Pancarta 100×80 con madera', type:'unit', pvp:20, instalacion:20, corporativo:18 }, { key:'ojal_grande', label:'Ojal grande (c/u)', type:'unit', pvp:0.5, instalacion:0.5, corporativo:0.3 }, { key:'ojal_pequeno', label:'Ojal pequeño (c/u)', type:'unit', pvp:0.3, instalacion:0.3, corporativo:0.1 }, { key:'tubo_cortina_1_2', label:'Tubo cortina dorado 1/2" (metro lineal)', type:'unit', pvp:3, instalacion:3, corporativo:2 }, { key:'tubo_cortina_3_4', label:'Tubo cortina dorado 3/4" (metro lineal)', type:'unit', pvp:4, instalacion:4, corporativo:3 }, { key:'tubo_cortina_1', label:'Tubo cortina dorado 1" (metro lineal)', type:'unit', pvp:5, instalacion:5, corporativo:4 }, { key:'tubo_hierro_ml', label:'Tubo de hierro para guindola (metro lineal)', type:'unit', pvp:6, instalacion:6, corporativo:5 }, { key:'diseno_logo_basico', label:'Diseño de logotipo básico (2 propuestas + AI)', type:'unit', pvp:30, instalacion:30, corporativo:25 }, { key:'diseno_logo_avanzado', label:'Diseño de logotipo avanzado (3 propuestas + AI)', type:'unit', pvp:50, instalacion:50, corporativo:45 }, { key:'brief_marca', label:'Brief de marca con diseños originales', type:'unit', pvp:100, instalacion:100, corporativo:100 } ] }
+  ]
+};
+
+// ------------------------- BASE DE DATOS #2: SOUVENIRS, IMPRENTA, ETC (POR PRODUCTO) -------------------------
+const SOUVENIR_DB = {
+  categories: [
+    {
+      name: "Souvenirs y Personalizados",
+      items: [
+        { key: "jarro_blanco_sub", label: "Jarro Blanco con Sublimación", prices: [ {qty: 1, pvp: 5.00}, {qty: 6, pvp: 4.50}, {qty: 12, pvp: 4.00}, {qty: 24, pvp: 3.50}, {qty: 36, pvp: 3.00}, {qty: 50, pvp: 2.50}, {qty: 100, pvp: 2.00}, {qty: 300, pvp: 1.75}, {qty: 500, pvp: 1.50}, {qty: 1000, pvp: 1.25}, {qty: 2000, pvp: 1.20}, {qty: 5000, pvp: 1.15}, {qty: 10000, pvp: 1.00} ] },
+        { key: "porta_taza_pers", label: "Porta Taza Personalizada", prices: [ {qty: 1, pvp: 3.00}, {qty: 6, pvp: 2.00}, {qty: 12, pvp: 1.50}, {qty: 24, pvp: 1.25}, {qty: 36, pvp: 1.00}, {qty: 50, pvp: 0.90}, {qty: 100, pvp: 0.80}, {qty: 300, pvp: 0.70}, {qty: 500, pvp: 0.50}, {qty: 1000, pvp: 0.40}, {qty: 2000, pvp: 0.30}, {qty: 5000, pvp: 0.25}, {qty: 10000, pvp: 0.20} ] },
+        { key: "jarro_color_int", label: "Jarro Sublimado Color Interior", prices: [ {qty: 1, pvp: 6.00}, {qty: 6, pvp: 5.00}, {qty: 12, pvp: 4.50}, {qty: 24, pvp: 4.00}, {qty: 36, pvp: 3.75}, {qty: 50, pvp: 3.50}, {qty: 100, pvp: 3.25}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.25}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.75} ] },
+        { key: "jarro_magico", label: "Jarro Sublimado Mágico (Negro Mate)", prices: [ {qty: 1, pvp: 6.00}, {qty: 6, pvp: 5.00}, {qty: 12, pvp: 4.50}, {qty: 24, pvp: 4.00}, {qty: 36, pvp: 3.75}, {qty: 50, pvp: 3.50}, {qty: 100, pvp: 3.25}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.25}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.75} ] },
+        { key: "jarro_escarchado", label: "Jarro Escarchado Mágico Mate (Negro/Azul)", prices: [ {qty: 1, pvp: 6.00}, {qty: 6, pvp: 5.00}, {qty: 12, pvp: 4.50}, {qty: 24, pvp: 4.00}, {qty: 36, pvp: 3.75}, {qty: 50, pvp: 3.50}, {qty: 100, pvp: 3.25}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.25}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.75} ] },
+        { key: "jarro_metalizado", label: "Jarro Metalizado para Vinil Troquelado", prices: [ {qty: 1, pvp: 6.00}, {qty: 6, pvp: 5.00}, {qty: 12, pvp: 4.50}, {qty: 24, pvp: 4.00}, {qty: 36, pvp: 3.75}, {qty: 50, pvp: 3.50}, {qty: 100, pvp: 3.25}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.25}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.75} ] },
+        { key: "jarro_corazon", label: "Jarro Blanco de Corazón Sublimable", prices: [ {qty: 1, pvp: 6.00}, {qty: 6, pvp: 5.00}, {qty: 12, pvp: 4.50}, {qty: 24, pvp: 4.00}, {qty: 36, pvp: 3.75}, {qty: 50, pvp: 3.50}, {qty: 100, pvp: 3.25}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.25}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.75} ] },
+        { key: "jarro_cervecero", label: "Jarro Cervecero Arenado para Sublimación", prices: [ {qty: 1, pvp: 8.00}, {qty: 6, pvp: 7.00}, {qty: 12, pvp: 6.00}, {qty: 24, pvp: 5.75}, {qty: 36, pvp: 5.50}, {qty: 50, pvp: 5.25}, {qty: 100, pvp: 5.00}, {qty: 300, pvp: 4.75}, {qty: 500, pvp: 4.50}, {qty: 1000, pvp: 4.25}, {qty: 2000, pvp: 4.00}, {qty: 5000, pvp: 3.75}, {qty: 10000, pvp: 3.50} ] },
+        { key: "jarro_mason", label: "Jarro Mason Transparente", prices: [ {qty: 1, pvp: 8.00}, {qty: 6, pvp: 7.00}, {qty: 12, pvp: 6.00}, {qty: 24, pvp: 5.00}, {qty: 36, pvp: 4.50}, {qty: 50, pvp: 4.25}, {qty: 100, pvp: 4.00}, {qty: 300, pvp: 3.75}, {qty: 500, pvp: 3.50}, {qty: 1000, pvp: 3.25}, {qty: 2000, pvp: 3.00}, {qty: 5000, pvp: 2.75}, {qty: 10000, pvp: 2.50} ] },
+        { key: "tomatodo_al_500", label: "Tomatodo Aluminio 500ml Blanco Sublimado", prices: [ {qty: 1, pvp: 10.00}, {qty: 6, pvp: 8.00}, {qty: 12, pvp: 7.00}, {qty: 24, pvp: 5.50}, {qty: 36, pvp: 5.25}, {qty: 50, pvp: 5.00}, {qty: 100, pvp: 4.50}, {qty: 300, pvp: 4.25}, {qty: 500, pvp: 4.00}, {qty: 1000, pvp: 3.75}, {qty: 2000, pvp: 3.50}, {qty: 5000, pvp: 3.25}, {qty: 10000, pvp: 3.00} ] },
+        { key: "tomatodo_plast_seri", label: "Tomatodo Plástico Serigrafía 1 color", prices: [ {qty: 100, pvp: 3.50}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.00}, {qty: 5000, pvp: 1.90}, {qty: 10000, pvp: 1.75} ] },
+        { key: "tomatodo_plast_dtf", label: "Tomatodo Plástico DTF Full Color", prices: [ {qty: 100, pvp: 4.00}, {qty: 300, pvp: 3.25}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.40}, {qty: 2000, pvp: 2.15}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.75} ] },
+        { key: "llavero_acril_7_1l", label: "Llavero Acrílico 7cm Un Lado", prices: [ {qty: 12, pvp: 2.00}, {qty: 24, pvp: 1.75}, {qty: 36, pvp: 1.50}, {qty: 50, pvp: 1.25}, {qty: 100, pvp: 1.00}, {qty: 300, pvp: 0.95}, {qty: 500, pvp: 0.90}, {qty: 1000, pvp: 0.75}, {qty: 2000, pvp: 0.70}, {qty: 5000, pvp: 0.60}, {qty: 10000, pvp: 0.50} ] },
+        { key: "llavero_acril_7_2l", label: "Llavero Acrílico 7cm Ambos Lados", prices: [ {qty: 12, pvp: 2.25}, {qty: 24, pvp: 1.85}, {qty: 36, pvp: 1.60}, {qty: 50, pvp: 1.35}, {qty: 100, pvp: 1.10}, {qty: 300, pvp: 1.05}, {qty: 500, pvp: 1.00}, {qty: 1000, pvp: 0.85}, {qty: 2000, pvp: 0.80}, {qty: 5000, pvp: 0.70}, {qty: 10000, pvp: 0.60} ] },
+        { key: "pin_58mm", label: "Pin Publicitario Redondo 58mm", prices: [ {qty: 1, pvp: 3.00}, {qty: 6, pvp: 2.00}, {qty: 12, pvp: 1.50}, {qty: 24, pvp: 1.25}, {qty: 36, pvp: 1.20}, {qty: 50, pvp: 1.00}, {qty: 100, pvp: 0.80}, {qty: 300, pvp: 0.75}, {qty: 500, pvp: 0.70}, {qty: 1000, pvp: 0.60}, {qty: 2000, pvp: 0.55}, {qty: 5000, pvp: 0.50}, {qty: 10000, pvp: 0.30} ] },
+        { key: "cuaderno_a5", label: "Cuaderno Personalizado A5 Pasta Dura", prices: [ {qty: 1, pvp: 20.00}, {qty: 6, pvp: 12.00}, {qty: 12, pvp: 10.00}, {qty: 24, pvp: 9.00}, {qty: 36, pvp: 8.50}, {qty: 50, pvp: 8.00}, {qty: 100, pvp: 5.50}, {qty: 300, pvp: 4.00}, {qty: 500, pvp: 3.80}, {qty: 1000, pvp: 3.50}, {qty: 2000, pvp: 2.80}, {qty: 5000, pvp: 2.60}, {qty: 10000, pvp: 2.50} ] },
+        { key: "boligrafo_promo", label: "Bolígrafo Promocional Serigrafía 1 Color", prices: [ {qty: 100, pvp: 0.70}, {qty: 300, pvp: 0.65}, {qty: 500, pvp: 0.60}, {qty: 1000, pvp: 0.55}, {qty: 2000, pvp: 0.50}, {qty: 5000, pvp: 0.45}, {qty: 10000, pvp: 0.40} ] },
+        { key: "boligrafo_semiejec", label: "Bolígrafo Semiejecutivo Serigrafía 1 Color", prices: [ {qty: 100, pvp: 2.00}, {qty: 300, pvp: 1.00}, {qty: 500, pvp: 0.95}, {qty: 1000, pvp: 0.90}, {qty: 2000, pvp: 0.85}, {qty: 5000, pvp: 0.80}, {qty: 10000, pvp: 0.75} ] },
+        { key: "lapiz_ecologico", label: "Lápiz Ecológico Serigrafía 1 Color", prices: [ {qty: 100, pvp: 0.80}, {qty: 300, pvp: 0.75}, {qty: 500, pvp: 0.70}, {qty: 1000, pvp: 0.60}, {qty: 2000, pvp: 0.50}, {qty: 5000, pvp: 0.40}, {qty: 10000, pvp: 0.30} ] },
+        { key: "almohada_magica", label: "Almohada Mágica Escarchada", prices: [ {qty: 1, pvp: 15.00}, {qty: 7, pvp: 14.00}, {qty: 13, pvp: 13.00}, {qty: 25, pvp: 12.00}, {qty: 51, pvp: 11.00}, {qty: 101, pvp: 10.50}, {qty: 501, pvp: 10.00} ] },
+        { key: "almohada_blanca", label: "Almohada Blanca con Sublimación", prices: [ {qty: 1, pvp: 12.00}, {qty: 7, pvp: 10.00}, {qty: 13, pvp: 9.00}, {qty: 25, pvp: 8.00}, {qty: 51, pvp: 7.00}, {qty: 101, pvp: 6.50}, {qty: 501, pvp: 5.00} ] },
+      ]
+    },
+    {
+      name: "Ropa y Textiles",
+      items: [
+        { key: "gorra_malla_sub", label: "Gorra Malla Sublimación", prices: [ {qty: 12, pvp: 5.00}, {qty: 24, pvp: 4.50}, {qty: 36, pvp: 4.00}, {qty: 50, pvp: 3.50}, {qty: 100, pvp: 3.00}, {qty: 300, pvp: 2.50}, {qty: 500, pvp: 2.25}, {qty: 1000, pvp: 2.00}, {qty: 2000, pvp: 1.90}, {qty: 5000, pvp: 1.75}, {qty: 10000, pvp: 1.50} ] },
+        { key: "gorra_malla_dtf", label: "Gorra Malla DTF Estampado", prices: [ {qty: 12, pvp: 7.00}, {qty: 24, pvp: 6.00}, {qty: 36, pvp: 5.50}, {qty: 50, pvp: 5.00}, {qty: 100, pvp: 4.00}, {qty: 300, pvp: 3.50}, {qty: 500, pvp: 3.00}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.25}, {qty: 5000, pvp: 2.00}, {qty: 10000, pvp: 1.70} ] },
+        { key: "gorra_gabardina_dtf", label: "Gorra Gabardina DTF Frente", prices: [ {qty: 12, pvp: 7.00}, {qty: 24, pvp: 6.00}, {qty: 36, pvp: 5.00}, {qty: 50, pvp: 4.50}, {qty: 100, pvp: 3.50}, {qty: 300, pvp: 3.00}, {qty: 500, pvp: 2.75}, {qty: 1000, pvp: 2.50}, {qty: 2000, pvp: 2.35}, {qty: 5000, pvp: 2.20}, {qty: 10000, pvp: 2.15} ] },
+        { key: "gorra_gabardina_bordado", label: "Gorra Gabardina Bordado Frente", prices: [ {qty: 12, pvp: 8.00}, {qty: 24, pvp: 7.00}, {qty: 36, pvp: 6.00}, {qty: 50, pvp: 5.50}, {qty: 100, pvp: 4.50}, {qty: 300, pvp: 4.25}, {qty: 500, pvp: 4.00}, {qty: 1000, pvp: 3.75}, {qty: 2000, pvp: 3.50}, {qty: 5000, pvp: 3.25}, {qty: 10000, pvp: 3.00} ] },
+        { key: "camiseta_alg_dtf_std", label: "Camiseta Algodón DTF A3 (S-XL)", prices: [ {qty: 1, pvp: 15.00}, {qty: 4, pvp: 14.00}, {qty: 7, pvp: 13.00}, {qty: 13, pvp: 12.00}, {qty: 25, pvp: 11.00}, {qty: 51, pvp: 10.00}, {qty: 101, pvp: 9.00}, {qty: 201, pvp: 8.00}, {qty: 501, pvp: 7.00} ] },
+        { key: "camiseta_alg_dtf_xxl", label: "Camiseta Algodón DTF A3 (XXL-XXXL)", prices: [ {qty: 1, pvp: 17.00}, {qty: 4, pvp: 16.00}, {qty: 7, pvp: 15.00}, {qty: 13, pvp: 14.00}, {qty: 25, pvp: 13.00}, {qty: 51, pvp: 12.00}, {qty: 101, pvp: 11.00}, {qty: 201, pvp: 10.00}, {qty: 501, pvp: 9.00} ] },
+        { key: "camiseta_polialg_sub_std", label: "Camiseta Polialgodón Sublimación A3 Blanca (S-XL)", prices: [ {qty: 1, pvp: 10.00}, {qty: 4, pvp: 9.00}, {qty: 7, pvp: 8.00}, {qty: 13, pvp: 7.00}, {qty: 25, pvp: 6.50}, {qty: 51, pvp: 6.00}, {qty: 101, pvp: 5.50}, {qty: 201, pvp: 5.00}, {qty: 501, pvp: 4.50} ] },
+        { key: "camiseta_polialg_sub_xxl", label: "Camiseta Polialgodón Sublimación A3 Blanca (XXL-XXXL)", prices: [ {qty: 1, pvp: 12.00}, {qty: 4, pvp: 11.00}, {qty: 7, pvp: 10.00}, {qty: 13, pvp: 9.00}, {qty: 25, pvp: 8.50}, {qty: 51, pvp: 8.00}, {qty: 101, pvp: 7.50}, {qty: 201, pvp: 7.00}, {qty: 501, pvp: 6.50} ] },
+        { key: "polo_bordado_std", label: "Polo con Cuello Bordado Bolsillo (S-XL)", prices: [ {qty: 6, pvp: 12.00}, {qty: 13, pvp: 11.00}, {qty: 25, pvp: 10.00}, {qty: 51, pvp: 9.00}, {qty: 101, pvp: 8.00}, {qty: 201, pvp: 7.00}, {qty: 501, pvp: 6.50} ] },
+        { key: "polo_bordado_xxl", label: "Polo con Cuello Bordado Bolsillo (XXL-XXXL)", prices: [ {qty: 6, pvp: 14.00}, {qty: 13, pvp: 13.00}, {qty: 25, pvp: 12.00}, {qty: 51, pvp: 11.00}, {qty: 101, pvp: 10.00}, {qty: 201, pvp: 9.00}, {qty: 501, pvp: 8.50} ] },
+        { key: "body_bebe_3_6", label: "Mono Body Recién Nacido (3-6 meses)", prices: [ {qty: 1, pvp: 12.00}, {qty: 4, pvp: 10.00}, {qty: 7, pvp: 9.00}, {qty: 13, pvp: 8.50} ] },
+        { key: "body_bebe_9_12", label: "Mono Body Recién Nacido (9-12 meses)", prices: [ {qty: 1, pvp: 15.00}, {qty: 4, pvp: 14.00}, {qty: 7, pvp: 13.00}, {qty: 13, pvp: 12.00} ] },
+        { key: "bolso_cambrella_1l", label: "Bolso Cambrella Sublimación (1 Lado)", prices: [ {qty: 13, pvp: 3.50}, {qty: 25, pvp: 3.00}, {qty: 51, pvp: 2.50}, {qty: 101, pvp: 2.00}, {qty: 501, pvp: 1.80} ] },
+        { key: "bolso_cambrella_2l", label: "Bolso Cambrella Sublimación (2 Lados)", prices: [ {qty: 13, pvp: 5.00}, {qty: 25, pvp: 4.50}, {qty: 51, pvp: 3.50}, {qty: 101, pvp: 2.75}, {qty: 501, pvp: 2.50} ] },
+        { key: "mochila_rodeo_1l", label: "Mochila Tela Rodeo con DTF (1 Lado)", prices: [ {qty: 13, pvp: 4.00}, {qty: 25, pvp: 3.25}, {qty: 51, pvp: 3.00}, {qty: 101, pvp: 2.80}, {qty: 501, pvp: 2.70} ] },
+        { key: "mochila_rodeo_2l", label: "Mochila Tela Rodeo con DTF (2 Lados)", prices: [ {qty: 13, pvp: 5.00}, {qty: 25, pvp: 4.25}, {qty: 51, pvp: 4.00}, {qty: 101, pvp: 3.60}, {qty: 501, pvp: 3.50} ] },
+      ]
+    },
+    {
+        name: "Imprenta",
+        items: [
+            { key: "tarjeta_couche_brillante", label: "Tarjeta Presentación Couche Brillante 350gr 2 Lados", prices: [{qty: 1000, pvp: 50/1000}, {qty: 2000, pvp: 70/2000}, {qty: 3000, pvp: 90/3000}, {qty: 4000, pvp: 110/4000}, {qty: 5000, pvp: 150/5000}, {qty: 10000, pvp: 240/10000}] },
+            { key: "tarjeta_couche_mate", label: "Tarjeta Presentación Couche Mate 350gr 2 Lados", prices: [{qty: 1000, pvp: 60/1000}, {qty: 2000, pvp: 90/2000}, {qty: 3000, pvp: 120/3000}, {qty: 4000, pvp: 170/4000}, {qty: 5000, pvp: 210/5000}, {qty: 10000, pvp: 340/10000}] },
+            { key: "tarjeta_uv_selectivo", label: "Tarjeta Presentación Couche UV Selectivo 350gr 2 Lados", prices: [{qty: 1000, pvp: 70/1000}, {qty: 2000, pvp: 120/2000}, {qty: 3000, pvp: 170/3000}, {qty: 4000, pvp: 210/4000}, {qty: 5000, pvp: 250/5000}, {qty: 10000, pvp: 420/10000}] },
+            { key: "volante_a5_tiro", label: "Volante A5 Couche 115gr (Tiro)", prices: [{qty: 1000, pvp: 65/1000}, {qty: 2000, pvp: 110/2000}, {qty: 3000, pvp: 160/3000}, {qty: 4000, pvp: 190/4000}, {qty: 5000, pvp: 240/5000}, {qty: 10000, pvp: 350/10000}] },
+            { key: "volante_a5_tiro_retiro", label: "Volante A5 Couche 115gr (Tiro y Retiro)", prices: [{qty: 1000, pvp: 80/1000}, {qty: 2000, pvp: 130/2000}, {qty: 3000, pvp: 190/3000}, {qty: 4000, pvp: 230/4000}, {qty: 5000, pvp: 270/5000}, {qty: 10000, pvp: 420/10000}] },
+            { key: "volante_a6_tiro", label: "Volante A6 Couche 115gr (Tiro)", prices: [{qty: 1000, pvp: 45/1000}, {qty: 2000, pvp: 55/2000}, {qty: 3000, pvp: 90/3000}, {qty: 4000, pvp: 110/4000}, {qty: 5000, pvp: 150/5000}, {qty: 10000, pvp: 250/10000}] },
+            { key: "volante_a6_tiro_retiro", label: "Volante A6 Couche 115gr (Tiro y Retiro)", prices: [{qty: 1000, pvp: 60/1000}, {qty: 2000, pvp: 80/2000}, {qty: 3000, pvp: 120/3000}, {qty: 4000, pvp: 150/4000}, {qty: 5000, pvp: 170/5000}, {qty: 10000, pvp: 300/10000}] },
+            { key: "diptico_a4", label: "Díptico A4 Couche 115gr (Ambos Lados)", prices: [{qty: 1000, pvp: 150/1000}, {qty: 2000, pvp: 240/2000}, {qty: 3000, pvp: 370/3000}, {qty: 4000, pvp: 500/4000}, {qty: 5000, pvp: 650/5000}, {qty: 10000, pvp: 800/10000}] },
+            { key: "triptico_29x21", label: "Tríptico 29x21cm Couche 115gr", prices: [{qty: 1000, pvp: 190/1000}, {qty: 2000, pvp: 260/2000}, {qty: 3000, pvp: 380/3000}, {qty: 4000, pvp: 500/4000}, {qty: 5000, pvp: 650/5000}, {qty: 10000, pvp: 800/10000}] },
+            { key: "calendario_21x43", label: "Calendario 21x43.5cm Couche 350gr", prices: [{qty: 100, pvp: 170/100}, {qty: 300, pvp: 220/300}, {qty: 500, pvp: 300/500}, {qty: 1000, pvp: 370/1000}] },
+            { key: "calendario_escritorio_simple_21x15", label: "Calendario Escritorio Simple 21x15cm", prices: [{qty: 100, pvp: 200/100}, {qty: 300, pvp: 250/300}, {qty: 500, pvp: 300/500}, {qty: 1000, pvp: 400/1000}] },
+            { key: "calendario_escritorio_12h_21x15", label: "Calendario Escritorio 12 Hojas 21x15cm", prices: [{qty: 100, pvp: 570/100}, {qty: 300, pvp: 730/300}, {qty: 500, pvp: 1000/500}, {qty: 1000, pvp: 1500/1000}] }
+        ]
+    },
+    {
+        name: "Fundas Promocionales",
+        items: [
+            { key: "funda_camiseta_t3_30", label: "Funda Camiseta T3-30", prices: [{qty: 500, pvp: 40/500}, {qty: 1000, pvp: 70/1000}, {qty: 3000, pvp: 220/3000}, {qty: 5000, pvp: 330/5000}, {qty: 10000, pvp: 40/10000}] }, // Note: 10k price seems anomalous in source
+            { key: "funda_boutique_1", label: "Funda Boutique #1", prices: [{qty: 500, pvp: 70/500}, {qty: 1000, pvp: 100/1000}, {qty: 3000, pvp: 110/3000}, {qty: 5000, pvp: 100/5000}, {qty: 10000, pvp: 90/10000}] },
+            { key: "funda_boutique_2", label: "Funda Boutique #2", prices: [{qty: 500, pvp: 100/500}, {qty: 1000, pvp: 140/1000}, {qty: 3000, pvp: 130/3000}, {qty: 5000, pvp: 120/5000}, {qty: 10000, pvp: 110/10000}] }
+        ]
+    }
+  ]
+};
+
+
+// --------------------------- UTILIDADES Y ESTADO ---------------------------
+const fmt = (n)=> `$${Number(n||0).toFixed(2)}`;
+const toNum = (v)=>{ const n = parseFloat(v); return isNaN(n)?0:n };
+
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.addEventListener('click', ()=> document.body.classList.toggle('light'));
+
+const ivaEl = document.getElementById('iva');
+const tierSel = document.getElementById('tier');
+const tierVal = ()=> tierSel.value || 'pvp';
+
+const catMed = document.getElementById('catMed');
+const itemMed = document.getElementById('itemMed');
+const catProd = document.getElementById('catProd');
+const itemProd = document.getElementById('itemProd');
+
+function fillCategories(){
+  catMed.innerHTML = VISUALCORP_DB.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join('');
+  catProd.innerHTML = SOUVENIR_DB.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join('');
+  onCatChange('med');
+  onCatChange('prod');
+}
+
+function onCatChange(scope){
+  if (scope === 'med') {
+    const catIdx = catMed.value || 0;
+    const items = VISUALCORP_DB.categories[catIdx].items;
+    const list = items
+      .filter(it => it.type === 'm2')
+      .map(it => `<option value="${it.key}">${it.label}</option>`)
+      .join('');
+    itemMed.innerHTML = `<option value="">(opcional) — elegir material</option>${list}`;
+  } else {
+    const catIdx = catProd.value || 0;
+    const items = SOUVENIR_DB.categories[catIdx].items;
+    const list = items
+      .map(it => `<option value="${it.key}">${it.label}</option>`)
+      .join('');
+    itemProd.innerHTML = `<option value="">(opcional) — elegir producto</option>${list}`;
+  }
+}
+
+catMed.addEventListener('change', ()=> onCatChange('med'));
+catProd.addEventListener('change', ()=> onCatChange('prod'));
+
+// ---------------------- CALCULADORA POR MEDIDAS (TALLER) ----------------------
+// Inputs
+const ancho = document.getElementById('ancho');
+const alto = document.getElementById('alto');
+const precioM2 = document.getElementById('precioM2');
+const areaM2 = document.getElementById('areaM2');
+const pillGroupMed = document.querySelector('.pill-group[data-scope="med"]');
+const designCustomMed = document.getElementById('designCustomMed');
+const tipoOjal = document.getElementById('tipoOjal');
+const cantOjal = document.getElementById('cantOjal');
+let designAddMed = 0;
+
+// Outputs
+const msgMed = document.getElementById('msgMed');
+const subMaterialMed = document.getElementById('subMaterialMed');
+const costoDisenoMed = document.getElementById('costoDisenoMed');
+const costoOjalesMed = document.getElementById('costoOjalesMed');
+const subtotalBaseMed = document.getElementById('subtotalBaseMed');
+const ivaFinalMed = document.getElementById('ivaFinalMed');
+const granTotalMed = document.getElementById('granTotalMed');
+
+
+function getVisualCorpItemByKey(key){
+  for(const cat of VISUALCORP_DB.categories){
+    for(const it of cat.items){ if(it.key===key) return it; }
+  }
+  return null;
+}
+
+function applyMedItem(){
+  const key = itemMed.value;
+  if(!key){ msgMed.textContent = 'Puedes escribir un precio por m² manualmente.'; return; }
+  const it = getVisualCorpItemByKey(key);
+  if(!it) return;
+  const tier = tierVal();
+  const val = (it[tier] ?? it.pvp ?? 0);
+  precioM2.value = val;
+  msgMed.textContent = `Se aplicó precio ${tier.toUpperCase()} = $${val.toFixed(2)} por m² (editable).`;
+  calcMedidas();
+}
+
+itemMed.addEventListener('change', applyMedItem);
+tierSel.addEventListener('change', ()=>{ applyMedItem(); applyProdItem(); });
+
+function calcMedidas(){
+  // 1. Calculate base material cost
+  const a_cm = Math.max(0, toNum(ancho.value));
+  const h_cm = Math.max(0, toNum(alto.value));
+  const pm2 = Math.max(0, toNum(precioM2.value));
+  const a_m = a_cm/100, h_m = h_cm/100;
+  const area = a_m * h_m;
+  areaM2.value = area.toFixed(4);
+  const subMaterial = area * pm2;
+
+  // 2. Calculate design cost
+  const customDesign = Math.max(0, toNum(designCustomMed.value));
+  const addDesign = customDesign > 0 ? customDesign : designAddMed;
+
+  // 3. Calculate extras cost
+  const tipo = tipoOjal.value;
+  const cant = Math.max(0, Math.floor(toNum(cantOjal.value)));
+  let costoOjales = 0;
+  if(tipo === 'grande') costoOjales = 0.50 * cant;
+  else if(tipo === 'pequeno') costoOjales = 0.30 * cant;
+
+  // 4. Calculate final totals (NEW LOGIC)
+  const subtotalBruto = subMaterial + addDesign + costoOjales;
+  const iva = subtotalBruto * (Math.max(0, toNum(ivaEl.value)) / 100);
+  const totalFinal = subtotalBruto + iva;
+
+  // 5. Update UI
+  subMaterialMed.textContent = fmt(subMaterial);
+  costoDisenoMed.textContent = fmt(addDesign);
+  costoOjalesMed.textContent = fmt(costoOjales);
+  subtotalBaseMed.textContent = fmt(subtotalBruto);
+  ivaFinalMed.textContent = fmt(iva);
+  granTotalMed.textContent = fmt(totalFinal);
+}
+
+[ancho, alto, precioM2, ivaEl, designCustomMed, tipoOjal, cantOjal].forEach(el=> el.addEventListener('input', calcMedidas));
+pillGroupMed.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('pill')){
+    [...pillGroupMed.querySelectorAll('.pill')].forEach(p=>p.classList.remove('active'));
+    e.target.classList.add('active');
+    designCustomMed.value = '';
+    designAddMed = toNum(e.target.dataset.add);
+    calcMedidas();
+  }
+});
+
+// ---------------------- CALCULADORA POR PRODUCTO (SOUVENIRS, ETC) ----------------------
+// Inputs
+const nombreProd = document.getElementById('nombreProd');
+const precioProd = document.getElementById('precioProd');
+const cantidadProd = document.getElementById('cantidadProd');
+const pillGroupProd = document.querySelector('.pill-group[data-scope="prod"]');
+const designCustomProd = document.getElementById('designCustomProd');
+let designAddProd = 0;
+
+// Outputs
+const msgProd = document.getElementById('msgProd');
+const subMaterialProd = document.getElementById('subMaterialProd');
+const costoDisenoProd = document.getElementById('costoDisenoProd');
+const subtotalBaseProd = document.getElementById('subtotalBaseProd');
+const ivaFinalProd = document.getElementById('ivaFinalProd');
+const granTotalProd = document.getElementById('granTotalProd');
+
+
+function getSouvenirItemByKey(key){
+    for (const cat of SOUVENIR_DB.categories) {
+        const found = cat.items.find(it => it.key === key);
+        if (found) return found;
+    }
+    return null;
+}
+
+function applyProdItem(){
+  const key = itemProd.value;
+  if(!key){ 
+    nombreProd.value = '';
+    precioProd.value = '';
+    precioProd.readOnly = false;
+    msgProd.textContent = 'Selecciona un producto.';
+    return;
+  }
+  const it = getSouvenirItemByKey(key);
+  if(!it) return;
+  
+  nombreProd.value = it.label;
+  
+  if (it.prices && it.prices.length > 0) {
+    precioProd.readOnly = true;
+    msgProd.textContent = `Precio automático por cantidad.`;
+  } else {
+    precioProd.readOnly = false;
+    precioProd.value = (it.pvp || 0).toFixed(2);
+    msgProd.textContent = `Precio unitario fijo (editable).`;
+  }
+  
+  calcProducto();
+}
+
+itemProd.addEventListener('change', applyProdItem);
+
+function calcProducto(){
+  // 1. Calculate base product cost
+  let unitPrice = 0;
+  const c = Math.max(0, Math.floor(toNum(cantidadProd.value)));
+  const key = itemProd.value;
+  const it = key ? getSouvenirItemByKey(key) : null;
+
+  if (it && it.prices && it.prices.length > 0) {
+    precioProd.readOnly = true;
+    for (let i = it.prices.length - 1; i >= 0; i--) {
+        if (c >= it.prices[i].qty) {
+            unitPrice = it.prices[i].pvp;
+            break;
+        }
+    }
+    if (unitPrice === 0 && c > 0) {
+       unitPrice = it.prices[0].pvp;
+    }
+    precioProd.value = unitPrice.toFixed(4);
+  } else {
+    if (it) precioProd.readOnly = false;
+    unitPrice = Math.max(0, toNum(precioProd.value));
+  }
+  const subProductos = unitPrice * c;
+
+  // 2. Calculate design cost
+  const customDesign = Math.max(0, toNum(designCustomProd.value));
+  const addDesign = customDesign > 0 ? customDesign : designAddProd;
+
+  // 3. Calculate final totals (NEW LOGIC)
+  const subtotalBruto = subProductos + addDesign;
+  const iva = subtotalBruto * (Math.max(0, toNum(ivaEl.value)) / 100);
+  const totalFinal = subtotalBruto + iva;
+
+  // 4. Update UI
+  subMaterialProd.textContent = fmt(subProductos);
+  costoDisenoProd.textContent = fmt(addDesign);
+  subtotalBaseProd.textContent = fmt(subtotalBruto);
+  ivaFinalProd.textContent = fmt(iva);
+  granTotalProd.textContent = fmt(totalFinal);
+}
+
+[precioProd, cantidadProd, ivaEl, designCustomProd].forEach(el=> el.addEventListener('input', calcProducto));
+pillGroupProd.addEventListener('click', (e)=>{
+  if(e.target.classList.contains('pill')){
+    [...pillGroupProd.querySelectorAll('.pill')].forEach(p=>p.classList.remove('active'));
+    e.target.classList.add('active');
+    designCustomProd.value = '';
+    designAddProd = toNum(e.target.dataset.add);
+    calcProducto();
+  }
+});
+
+// --------------------------- INIT ---------------------------
+fillCategories();
+
+// Defaults
+ancho.value = 100; alto.value = 100; precioM2.value = 7;
+document.querySelector('.pill-group[data-scope="med"] .pill[data-add="0"]').classList.add('active');
+document.querySelector('.pill-group[data-scope="prod"] .pill[data-add="0"]').classList.add('active');
+
+// Primera corrida
+calcMedidas();
+applyProdItem();
+
+// Mostrar DBs en <details>
+document.getElementById('dbView1').textContent = JSON.stringify(VISUALCORP_DB, null, 2);
+document.getElementById('dbView2').textContent = JSON.stringify(SOUVENIR_DB, null, 2);
+</script>
+
+</body>
+</html>
