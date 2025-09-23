@@ -11,11 +11,23 @@
       --input:#1c1c1c; --border:linear-gradient(135deg,#ffd400,#ff9f0a);
       --accent:#ffcc00; --shadow: 0 8px 24px rgba(0,0,0,.35);
       --ok: #00d27a; --warn: #ffb703;
+
+      /* superficies y fondos dependientes del tema */
+      --surface-1: var(--card); /* tarjetas/chips */
+      --surface-2: #0f0f0f;     /* bloques suaves (details, etc.) */
+      --badge-bg: #262626;       /* badges / pastillas informativas */
+      --code-bg: #0f0f0f;        /* <pre>/<code> */
     }
     body.light{
       --bg:#ffffff; --fg:#121212; --muted:#444; --card:#f7f7f7;
       --input:#ffffff; --shadow: 0 6px 20px rgba(0,0,0,.08);
+
+      --surface-1:#f7f7f7;
+      --surface-2:#f1f1f1;
+      --badge-bg:#efefef;
+      --code-bg:#f7f7f7;
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -29,46 +41,71 @@
     .brand{ display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap }
     .brand h1{ font-size: clamp(18px, 2.2vw, 24px); margin:0; letter-spacing:.3px; font-weight:800 }
     .top-controls{ display:flex; gap:12px; flex-wrap:wrap; align-items:center }
-    .chip{ display:flex; align-items:center; gap:8px; background:var(--card); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow) }
+
+    .chip{ display:flex; align-items:center; gap:8px; background:var(--surface-1); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow) }
     .chip label{ font-weight:700; font-size:13px; color:var(--muted)}
     .chip input[type="number"], .chip select{ width:110px; padding:10px 12px; border-radius:10px; border:1px solid transparent; background:var(--input); color:var(--fg); outline:none }
     .chip input[type="number"]:focus, .chip select:focus{ border-color: var(--accent) }
-    .btn{ cursor:pointer; user-select:none; border:0; border-radius:12px; padding:10px 14px; background:var(--card); color:var(--fg); font-weight:800; box-shadow:var(--shadow); transition:transform .06s ease, box-shadow .2s ease }
+
+    .btn{ cursor:pointer; user-select:none; border:0; border-radius:12px; padding:10px 14px; background:var(--surface-1); color:var(--fg); font-weight:800; box-shadow:var(--shadow); transition:transform .06s ease, box-shadow .2s ease }
     .btn:hover{ transform:translateY(-1px) }
     .btn.toggle{ position:relative; padding-left:46px }
     .btn.toggle::before{ content:""; position:absolute; left:12px; top:50%; translate:0 -50%; width:22px; height:22px; border-radius:50%; background: radial-gradient(circle at 30% 30%, #fff08a, #ffb300 70%); box-shadow: inset 0 0 0 2px rgba(0,0,0,.15) }
     body.light .btn.toggle::before{ background: radial-gradient(circle at 30% 30%, #aac7ff, #5aa9ff 70%) }
+
     .grid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:20px; align-items:start }
     .col{ grid-column: span 6 }
     @media (max-width: 900px){ .col{ grid-column: 1 / -1 } }
-    .card{ position:relative; border-radius:18px; padding:18px; background:var(--card); box-shadow:var(--shadow); overflow:hidden }
+
+    .card{ position:relative; border-radius:18px; padding:18px; background:var(--surface-1); box-shadow:var(--shadow); overflow:hidden }
     .card::before{ content:""; position:absolute; inset:0; border-radius:18px; padding:2px; background:var(--border); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none }
     .card h2{ margin:4px 0 12px; font-size: clamp(18px,2.4vw,22px) }
+
     .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px }
     .row3{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:12px }
     .row1{ display:grid; grid-template-columns: 1fr; gap:12px; margin-bottom:12px }
+
     label{ font-size:12px; color:var(--muted); font-weight:800; letter-spacing:.3px; text-transform:uppercase }
     input[type="number"], input[type="text"], select{ width:100%; border-radius:12px; padding:12px 14px; border:1px solid transparent; background:var(--input); color:var(--fg); outline:none }
     input::placeholder{ color:#888 }
     input:focus, select:focus{ border-color: var(--accent) }
+
     .kpi{ display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
     .kpi .label{ color:var(--muted); font-weight:700; font-size:14px; }
     .kpi .val{ font-weight:700; font-size: 16px; }
+
     .pill-group{ display:flex; flex-wrap:wrap; gap:10px }
     .pill{ border:0; padding:10px 14px; border-radius:999px; background: linear-gradient(135deg,#ffd400,#ff9f0a); color:#111; cursor:pointer; font-weight:900; letter-spacing:.2px; box-shadow: 0 6px 16px rgba(255,159,10,.25); opacity:.95 }
     .pill:hover{ opacity:1; transform: translateY(-1px) }
     .pill.active{ box-shadow: 0 0 0 2px rgba(0,0,0,.22), 0 10px 24px rgba(255,159,10,.35); opacity:1 }
+
     .divider{ height:1px; background:linear-gradient(90deg, transparent, #ffd400 40%, #ff9f0a 60%, transparent); opacity:.5; margin:12px 0 }
     .foot-note{ font-size:12px; color:var(--muted); margin-top:6px }
+
     .total-box{ display:grid; gap:10px; margin-top:12px; }
     .total-line{ display:flex; justify-content:space-between; align-items:center; font-weight:900 }
     .grand{ font-size: clamp(20px, 3vw, 28px) }
     .muted{ color:var(--muted); font-weight:700 }
-    .badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; background:#AFAFAF }
+
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; background:var(--badge-bg); color:var(--fg) }
     .dot{ width:8px; height:8px; border-radius:50% }
-    details.db{ background: #0f0f0f; border-radius:12px; padding:10px 12px }
+
+    /* details + pre vinculados a la DB */
+    details.db{ background: var(--surface-2); border-radius:12px; padding:10px 12px }
     details.db summary{ cursor:pointer; font-weight:800 }
+    #dbView1, #dbView2{
+      white-space:pre-wrap; max-height: 200px; overflow-y:auto;
+      background: var(--code-bg); padding:8px; border-radius:8px; color:var(--fg);
+    }
+
     code.small{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px }
+
+    /* input pequeño que tenía estilos inconsistentes */
+    .small-input{
+      width: 120px; border-radius: 12px; padding: 10px 12px;
+      border: 1px solid transparent; background: var(--input); color: var(--fg); outline: none;
+    }
+    .small-input:focus{ border-color: var(--accent); }
   </style>
 </head>
 <body>
